@@ -7,8 +7,8 @@ import itertools
 import pickle
 
 env = gym.make("CartPole-v1")
-print("act_spa", env.action_space)
-print("env.observation_space", env.observation_space.low)
+#print("act_spa", env.action_space)
+#print("env.observation_space", env.observation_space.low)
 
 
 x = tf.placeholder('float', [None, 4])
@@ -23,24 +23,16 @@ rand_bool = lambda x: x*100 > random.randrange(0, 100) #Returns True with probab
 
 def neural_network(data):
 
-	#p_dropout = 0.2
 	n_nodes_1 = 16
-	#n_nodes_2 = 16
 	n_outputs = 2
 	hidden_layer_1 = {'weights':tf.Variable(tf.random_normal([4, n_nodes_1]), name = 'weights_1'),
 		'biases':tf.Variable(tf.random_normal([n_nodes_1]), name = 'biases_1')}
-	#hidden_layer_2 = {'weights':tf.Variable(tf.random_normal([n_nodes_1, n_nodes_2])),
-	#	'biases':tf.Variable(tf.random_normal([n_nodes_2]))}
 
 	output_layer = {'weights':tf.Variable(tf.random_normal([n_nodes_1, n_outputs]), name = 'weights_out'),
 		'biases':tf.Variable(tf.random_normal([n_outputs]), name = 'biases_out')}
 
 	l1 = tf.add(tf.matmul(data, hidden_layer_1['weights']), hidden_layer_1['biases'])
 	l1 = tf.nn.relu(l1)
-	#l1 = tf.nn.dropout(l1, p_dropout)
-
-	#l2 = tf.add(tf.matmul(l1, hidden_layer_2['weights']), hidden_layer_2['biases'])
-	#l2 = tf.nn.relu(l2)
 
 	output = tf.add(tf.matmul(l1, output_layer['weights']), output_layer['biases'])
 	output = tf.nn.softmax(output)
@@ -88,12 +80,11 @@ def test_NN(NN, iterations = 4, render = False, verbose = False):
 
 
 
-def generate_samples(nb_games = 5000, min_score = 50, neg_mem = 8, min_samples = 0, max_samples = 200000,  render = False, p_random = 1, NN = None, verbose = False, auto = False):
+def generate_samples(nb_games = 5000, min_score = 50, neg_mem = 8, min_samples = 0, max_samples = 200000,  render = False, p_random = 1, NN = None, verbose = False):
 
 	global nb_games_used
 	if verbose:
 		print("Generate_samples")
-		#print("nb_ games:", nb_games)
 		print("min_score:", min_score)
 		print("neg_mem:", neg_mem)
 		print("p_random", p_random)
@@ -141,7 +132,6 @@ def generate_samples(nb_games = 5000, min_score = 50, neg_mem = 8, min_samples =
 		if reward_tot >= min_score:
 			samples.append(interm_samples[:-neg_mem-1])
 
-			#Test
 			if sum([len(game) for game in samples]) > max_samples:
 				break
 
@@ -158,21 +148,20 @@ def generate_samples(nb_games = 5000, min_score = 50, neg_mem = 8, min_samples =
 
 def train(x, target_score = 480, save = False):
 	global nb_games_used
-	p_random = 1 #Start with only random actions
+	p_random = 1 #Probability of random action, start with only random actions.
 	negative_memory = 4
 
 	NN_action = neural_network(x)
 	cost = tf.reduce_mean(tf.losses.mean_squared_error(predictions = NN_action, labels=y))
 
 	optimizer = tf.train.AdamOptimizer().minimize(cost)
-	#optimizer = tf.train.RMSPropOptimizer(0.001).minimize(cost)
 
 	with tf.Session() as sess:
 		sess.run(tf.global_variables_initializer())
 
 		verbose = True
 		min_epochs = 8
-		max_epochs = 24 #"epochs"
+		max_epochs = 24
 		batch_size = 16
 
 		samples = []
@@ -245,7 +234,6 @@ def train(x, target_score = 480, save = False):
 				print("epoch", e)
 
 				for b in range(int(len(X)/batch_size)):
-					#print(np.array(memory[0][b*batch_size:]))
 					_, c = sess.run([optimizer, cost], feed_dict = {x: np.array(X[b*batch_size:(b+1)*batch_size]), y: np.array(Y[b*batch_size:(b+1)*batch_size])})
 
 
@@ -257,7 +245,7 @@ def train(x, target_score = 480, save = False):
 					break
 				prev_mean = curr_mean
 
-			#Update params (?):
+			#Update params:
 			min_score += 12
 			if min_score < 30:
 				min_score = 30
