@@ -280,10 +280,14 @@ def load_NN(name = "cartpole.ckpt", test = False):
 
 	return NN
 
+
+def pre_load():
+	NN = neural_network(x)
+
 if __name__ == '__main__':
 	games_used_list = []
 	try:
-		load_NN(test = False) #Not sure why but the model doesn't load correctly without this.
+		pre_load() #Not sure why but the model doesn't load correctly without this.
 		load_NN(test = True)
 	except tf.errors.NotFoundError:
 		print("No trained model found.")
