@@ -5,6 +5,7 @@ import random
 import time
 import itertools
 import pickle
+from time import sleep
 
 env = gym.make("CartPole-v1")
 #print("act_spa", env.action_space)
@@ -38,8 +39,6 @@ def neural_network(data):
 	output = tf.nn.softmax(output)
 	return output
 
-
-
 def test_NN(NN, iterations = 4, render = False, verbose = False):
 
 	startT = time.time()
@@ -58,6 +57,7 @@ def test_NN(NN, iterations = 4, render = False, verbose = False):
 			nn_input = {x: [observation]}
 			action = NN.eval(nn_input)
 			action = np.argmax(action[0])
+			#print(action)
 
 			observation, reward, done, info = env.step(action)
 			reward_tot += 1
@@ -168,7 +168,7 @@ def train(x, target_score = 480, save = False):
 		min_samples = 1000
 		max_samples = 1000
 		max_nb_samples = 60000
-		min_score = 22
+		min_score = 24
 		neg_mem = 5
 		p_random = 1
 		nb_samples = 0
@@ -262,29 +262,17 @@ def train(x, target_score = 480, save = False):
 			test_NN(NN = NN_action, iterations = 4, render = True, verbose = True)
 
 		print("Final mean:", np.mean(test_NN(NN = NN_action, iterations = 100)))
-		test_NN(NN = NN_action, iterations = 8, render = True, verbose = True)
 		if save:
 			saver = tf.train.Saver()
 			saver.save(sess, './cartpole.ckpt')
-
-			print("Saved")
-
-
-
-
-def save_NN(NN, name = "cartpole.pkl"):
-
-	with open(name, 'wb') as output:
-		pickle.dump(NN, output)
-
-	print("Saved successfully")
+			print("Saved???")
 
 
 def load_NN(name = "cartpole.ckpt", test = False):
 
 	NN = neural_network(x)
+	saver = tf.train.Saver()
 	with tf.Session() as sess:
-		saver = tf.train.Saver()
 		saver.restore(sess, './' + name)
 		if test:
 			print("Mean:", np.mean(test_NN(NN, iterations = 100)))
@@ -292,11 +280,10 @@ def load_NN(name = "cartpole.ckpt", test = False):
 
 	return NN
 
-
 if __name__ == '__main__':
-
 	games_used_list = []
 	try:
+		load_NN(test = False) #Not sure why but the model doesn't load correctly without this.
 		load_NN(test = True)
 	except tf.errors.NotFoundError:
 		print("No trained model found.")
